@@ -46,10 +46,10 @@ class ParseArchiveTest(unittest.TestCase):
         })
 
 
-class ParseYahooTest(unittest.TestCase):
-    def test_hk_dates_and_null_closes(self):
-        out = hsidata.parse_yahoo(fixture("yahoo_sample.json"))
-        self.assertEqual(out, {"2026-10-21": 23900.12, "2026-10-23": 23651.87})
+class ParseEastmoneyTest(unittest.TestCase):
+    def test_dates_and_closes(self):
+        out = hsidata.parse_eastmoney(fixture("eastmoney_sample.json"))
+        self.assertEqual(out, {"2026-10-20": 23867.74, "2026-10-21": 23651.87})
 
 
 class SaveTest(unittest.TestCase):

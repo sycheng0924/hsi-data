@@ -4,7 +4,7 @@ previous close and the whole-market (Main Board) HK$ turnover.
 Sources
 - HKEX Daily Quotations sheet (about 5 weeks kept online): HSI close, previous close, HK$ turnover.
 - HKEX Securities Statistics Archive JSON: daily HK$ turnover back to 1986 (up to last month end).
-- Yahoo Finance chart API: HSI closes for the one-time history backfill only.
+- Eastmoney kline API: HSI closes for the one-time history backfill only.
 
 Usage
   python scripts/hsidata.py update            # daily job: add any new trading days
@@ -29,7 +29,8 @@ HKEX = "https://www.hkex.com.hk"
 SHEET_URL = HKEX + "/eng/stat/smstat/dayquot/d{:%y%m%d}e.htm"
 ARCHIVE_URL = HKEX + "/eng/stat/smstat/mthbull/rpt_data_statistics_archive_trading_data_{}.json"
 ARCHIVE_SPANS = [(1986, 1989)] + [(y, y + 4) for y in range(1990, 2030, 5)]
-YAHOO_URL = "https://query1.finance.yahoo.com/v8/finance/chart/%5EHSI?period1={}&period2={}&interval=1d"
+EASTMONEY_URL = ("https://push2his.eastmoney.com/api/qt/stock/kline/get"
+                 "?secid=100.HSI&fields1=f1,f2,f3&fields2=f51,f53&klt=101&fqt=0&beg={:%Y%m%d}&end=20500101")
 
 COLUMNS = ["date", "close", "prevClose", "turnover", "halfDay"]
 SHEET_DAYS_ONLINE = 35
@@ -86,16 +87,12 @@ def parse_archive(text):
     return out
 
 
-def parse_yahoo(text):
-    """Parses a Yahoo chart response into {date: close} using HK local dates."""
-    res = json.loads(text)["chart"]["result"][0]
-    offset = dt.timedelta(seconds=res["meta"].get("gmtoffset", 8 * 3600))
-    closes = res["indicators"]["quote"][0]["close"]
+def parse_eastmoney(text):
+    """Parses an Eastmoney kline response ("YYYY-MM-DD,close" lines) into {date: close}."""
     out = {}
-    for ts, close in zip(res["timestamp"], closes):
-        if close is not None:
-            day = (dt.datetime.fromtimestamp(ts, dt.timezone.utc) + offset).date().isoformat()
-            out[day] = round(close, 2)
+    for line in json.loads(text)["data"]["klines"]:
+        day, close = line.split(",")[:2]
+        out[day] = float(close)
     return out
 
 
@@ -112,7 +109,7 @@ def save(rows):
     if DATA_FILE.exists() and json.loads(DATA_FILE.read_text())["rows"] == ordered:
         return False
     doc = {
-        "source": "HKEX Daily Quotations and Securities Statistics Archive; history closes from Yahoo Finance",
+        "source": "HKEX Daily Quotations and Securities Statistics Archive; history closes from Eastmoney",
         "turnover": "HKEX Main Board total trading value, HKD",
         "updated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "columns": COLUMNS,
@@ -156,10 +153,8 @@ def backfill(since):
     for a, b in ARCHIVE_SPANS:
         if b >= since_date.year:
             turnover.update(parse_archive(fetch(ARCHIVE_URL.format(f"{a}_{b}"))))
-    p1 = int(dt.datetime.combine(since_date - dt.timedelta(days=10), dt.time(), HKT).timestamp())
-    p2 = int(dt.datetime.now(dt.timezone.utc).timestamp())
-    closes = parse_yahoo(fetch(YAHOO_URL.format(p1, p2)))
-    print(f"archive turnover days: {len(turnover)}, yahoo closes: {len(closes)}")
+    closes = parse_eastmoney(fetch(EASTMONEY_URL.format(since_date - dt.timedelta(days=10))))
+    print(f"archive turnover days: {len(turnover)}, eastmoney closes: {len(closes)}")
 
     rows = {}
     prev = None
@@ -175,12 +170,12 @@ def backfill(since):
     mismatches = [(d, rows[d]["close"], s["close"]) for d, s in sheets.items()
                   if d in rows and abs(rows[d]["close"] - s["close"]) > 0.05]
     for m in mismatches:
-        print("close mismatch (yahoo vs hkex):", m)
+        print("close mismatch (eastmoney vs hkex):", m)
     rows.update(sheets)
     save(rows)
     print(f"rows: {len(rows)}, {min(rows)} to {max(rows)}, mismatches: {len(mismatches)}")
     if len(mismatches) > 2:
-        sys.exit("too many mismatches between Yahoo and HKEX closes")
+        sys.exit("too many mismatches between Eastmoney and HKEX closes")
 
 
 def main():
