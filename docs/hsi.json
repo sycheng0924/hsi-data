@@ -1,4 +1,4 @@
-{"source":"HKEX Daily Quotations and Securities Statistics Archive; history closes from Eastmoney","turnover":"HKEX Main Board total trading value, HKD","updated":"2026-10-26T14:46:36Z","columns":["date","close","prevClose","turnover","halfDay"],"rows":[["2016-01-04",21327.12,21914.4,73844085313,0],
+{"source":"HKEX Daily Quotations and Securities Statistics Archive; history closes from Eastmoney","turnover":"HKEX Main Board total trading value, HKD","updated":"2026-10-27T13:51:48Z","columns":["date","close","prevClose","turnover","halfDay"],"rows":[["2016-01-04",21327.12,21914.4,73844085313,0],
 ["2016-01-05",21188.72,21327.12,72435212309,0],
 ["2016-01-06",20980.81,21188.72,75175371143,0],
 ["2016-01-07",20333.34,20980.81,107199716521,0],
@@ -2656,4 +2656,5 @@
 ["2026-10-21",23651.87,23867.74,176597304443,0],
 ["2026-10-22",22934.68,23651.87,256050949416,0],
 ["2026-10-23",23093.37,22934.68,249783590343,0],
-["2026-10-26",23211.81,23093.37,175758489826,0]]}
+["2026-10-26",23211.81,23093.37,175758489826,0],
+["2026-10-27",23041.32,23211.81,178347926416,0]]}
