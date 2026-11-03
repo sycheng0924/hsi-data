@@ -3,8 +3,9 @@ name: Daily update
 on:
   schedule:
     # HKEX posts the Daily Quotations sheet some time in the evening (HKT = UTC+8).
-    # Hourly 17:05-00:05 HKT on weekdays, plus a catch-up run the next morning.
-    - cron: "5 9-16 * * 1-5"
+    # Observed 2026-10-22 to 11-02: ready between about 21:40 and 22:45 HKT.
+    # Hourly 20:05-00:05 HKT on weekdays, plus a catch-up run the next morning.
+    - cron: "5 12-16 * * 1-5"
     - cron: "30 0 * * 2-6"
   workflow_dispatch:
 
